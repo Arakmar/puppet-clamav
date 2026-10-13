@@ -1,0 +1,57 @@
+---
+# Publishes the module to the Puppet Forge and creates a GitHub release when a
+# v<semver> tag is pushed. The tagged commit first goes through the whole CI
+# (ci.yml) and the tag must match the version of metadata.json. Publishing
+# reuses the Vox Pupuli workflow (https://github.com/voxpupuli/gha-puppet),
+# which runs `rake module:push` from puppet-blacksmith, provided by the PDK
+# Gemfile.
+#
+# Requirements on the repository:
+#   - a `release` environment,
+#   - the PUPPET_FORGE_USERNAME and PUPPET_FORGE_API_KEY secrets,
+#   - metadata.json bumped to the tagged version before tagging.
+
+name: Release
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Tag matches metadata.json
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare the tag with the module version
+        run: |
+          version="$(jq -r .version metadata.json)"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error file=metadata.json::tag ${GITHUB_REF_NAME} does not match version ${version}"
+            exit 1
+          fi
+
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Release
+    needs:
+      - version
+      - ci
+    permissions:
+      # gh release create
+      contents: write
+    uses: voxpupuli/gha-puppet/.github/workflows/release.yml@v4
+    with:
+      allowed_owner: 'Arakmar'
+    secrets:
+      username: ${{ secrets.PUPPET_FORGE_USERNAME }}
+      api_key: ${{ secrets.PUPPET_FORGE_API_KEY }}
