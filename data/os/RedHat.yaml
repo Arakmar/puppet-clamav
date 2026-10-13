@@ -1,0 +1,41 @@
+---
+# EL 8 to 10 (EPEL): clamd runs as the clamd@scan instance, each daemon with
+# its own user. The tmpfiles of the packages create /run/clamd.scan (0710
+# clamscan:virusgroup) and /run/clamav-milter (0710 clamilt:clamilt).
+clamav::manage_repo: true
+clamav::user: 'clamscan'
+clamav::group: 'clamscan'
+clamav::home: '/'
+clamav::shell: '/usr/sbin/nologin'
+
+clamav::clamd::package_name: 'clamd'
+clamav::clamd::config_file: '/etc/clamd.d/scan.conf'
+clamav::clamd::service_name: 'clamd@scan'
+clamav::clamd::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  FixStaleSocket: true
+  LocalSocket: '/run/clamd.scan/clamd.sock'
+  LocalSocketGroup: 'virusgroup'
+  LocalSocketMode: '660'
+  LogSyslog: true
+  PidFile: '/run/clamd.scan/clamd.pid'
+  User: 'clamscan'
+
+clamav::freshclam::package_name: 'clamav-freshclam'
+clamav::freshclam::config_file: '/etc/freshclam.conf'
+clamav::freshclam::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  DatabaseMirror: 'database.clamav.net'
+  DatabaseOwner: 'clamupdate'
+
+clamav::milter::package_name: 'clamav-milter'
+clamav::milter::config_file: '/etc/mail/clamav-milter.conf'
+clamav::milter::default_options:
+  ClamdSocket: 'unix:/run/clamd.scan/clamd.sock'
+  FixStaleSocket: true
+  LogSyslog: true
+  MilterSocket: '/run/clamav-milter/clamav-milter.socket'
+  MilterSocketGroup: 'clamilt'
+  MilterSocketMode: '660'
+  PidFile: '/run/clamav-milter/clamav-milter.pid'
+  User: 'clamilt'

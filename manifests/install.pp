@@ -1,11 +1,16 @@
-# install.pp
-# Installs clamav package
+# @summary Installs the ClamAV base package
 #
-
+# @api private
 class clamav::install {
+  assert_private()
 
-  package { 'clamav':
-    ensure => $clamav::clamav_version,
-    name   => $clamav::clamav_package,
+  if $clamav::manage_repo {
+    include epel
+
+    Class['epel'] -> Package[$clamav::package_name]
+  }
+
+  package { $clamav::package_name:
+    ensure => $clamav::package_ensure,
   }
 }

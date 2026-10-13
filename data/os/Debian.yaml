@@ -1,0 +1,43 @@
+---
+# Debian and Ubuntu: clamd is socket activated by clamav-daemon.socket on
+# /run/clamav/clamd.ctl, the milter runs from an init script reading its
+# PidFile and MilterSocket, and logrotate rotates the log files below.
+clamav::user: 'clamav'
+clamav::group: 'clamav'
+clamav::home: '/var/lib/clamav'
+clamav::shell: '/bin/false'
+
+clamav::clamd::package_name: 'clamav-daemon'
+clamav::clamd::config_file: '/etc/clamav/clamd.conf'
+clamav::clamd::service_name: 'clamav-daemon'
+clamav::clamd::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  FixStaleSocket: true
+  LocalSocket: '/run/clamav/clamd.ctl'
+  LocalSocketGroup: 'clamav'
+  LocalSocketMode: '666'
+  LogFile: '/var/log/clamav/clamav.log'
+  LogTime: true
+  User: 'clamav'
+
+clamav::freshclam::package_name: 'clamav-freshclam'
+clamav::freshclam::config_file: '/etc/clamav/freshclam.conf'
+clamav::freshclam::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  DatabaseMirror: 'database.clamav.net'
+  DatabaseOwner: 'clamav'
+  LogTime: true
+  UpdateLogFile: '/var/log/clamav/freshclam.log'
+
+clamav::milter::package_name: 'clamav-milter'
+clamav::milter::config_file: '/etc/clamav/clamav-milter.conf'
+clamav::milter::default_options:
+  ClamdSocket: 'unix:/run/clamav/clamd.ctl'
+  FixStaleSocket: true
+  LogFile: '/var/log/clamav/clamav-milter.log'
+  LogTime: true
+  MilterSocket: '/run/clamav/clamav-milter.ctl'
+  MilterSocketGroup: 'clamav'
+  MilterSocketMode: '666'
+  PidFile: '/run/clamav/clamav-milter.pid'
+  User: 'clamav'
