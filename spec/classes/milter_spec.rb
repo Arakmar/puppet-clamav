@@ -29,6 +29,7 @@ describe 'clamav::milter' do
           package: nil,
           service: false,
           config_file: '/etc/clamav/clamav-milter.conf',
+          allow_list_file: '/etc/clamav/clamav-milter-allowlist.conf',
           content: <<~CONF,
             # Managed by Puppet
             ClamdSocket unix:/run/clamav/clamd.ctl
@@ -45,6 +46,7 @@ describe 'clamav::milter' do
           package: 'clamav-milter',
           service: true,
           config_file: '/etc/clamav/clamav-milter.conf',
+          allow_list_file: '/etc/clamav/clamav-milter-allowlist.conf',
           content: <<~CONF,
             # Managed by Puppet
             ClamdSocket unix:/run/clamav/clamd.ctl
@@ -62,6 +64,7 @@ describe 'clamav::milter' do
           package: 'clamav-milter',
           service: true,
           config_file: '/etc/mail/clamav-milter.conf',
+          allow_list_file: '/etc/mail/clamav-milter-allowlist.conf',
           content: <<~CONF,
             # Managed by Puppet
             ClamdSocket unix:/run/clamd.scan/clamd.sock
@@ -76,6 +79,7 @@ describe 'clamav::milter' do
         },
       }.fetch(os_facts[:os]['family'])
       config_file = expected[:config_file]
+      allow_list_file = expected[:allow_list_file]
 
       context 'with default parameters' do
         it { is_expected.to compile.with_all_deps }
@@ -91,6 +95,8 @@ describe 'clamav::milter' do
             .with_validate_cmd(nil)
             .that_requires('Class[clamav::install]')
         end
+
+        it { is_expected.not_to contain_file(allow_list_file) }
 
         if expected[:service]
           it { is_expected.to contain_service('clamav-milter').with_ensure('running').with_enable(true).that_subscribes_to("File[#{config_file}]") }
@@ -149,6 +155,37 @@ describe 'clamav::milter' do
         context 'validated by ClamAV' do
           it { expect_valid_for_clamav('milter', rendered_content(config_file)) }
         end
+      end
+
+      context 'with an allow list' do
+        let(:params) { { manage_service: true, allow_list: ['From:^postmaster@example\\.org$', 'To:^abuse@', '^noscan@example\\.org$'] } }
+
+        it { is_expected.to compile.with_all_deps }
+
+        it do
+          is_expected.to contain_file(allow_list_file)
+            .with_ensure('file')
+            .with_owner('root')
+            .with_group('root')
+            .with_mode('0644')
+            .with_content("# Managed by Puppet\nFrom:^postmaster@example\\.org$\nTo:^abuse@\n^noscan@example\\.org$\n")
+            .that_requires('Class[clamav::install]')
+            .that_notifies('Service[clamav-milter]')
+        end
+
+        it { is_expected.to contain_file(config_file).with_content(%r{^AllowList #{allow_list_file}\nClamdSocket }) }
+        it { is_expected.to contain_package(expected[:package]).that_comes_before("File[#{allow_list_file}]") } if expected[:package]
+
+        context 'validated by ClamAV' do
+          it { expect_valid_for_clamav('milter', rendered_content(config_file)) }
+        end
+      end
+
+      context 'with an allow list set in the options' do
+        let(:params) { { allow_list: ['To:^abuse@'], options: { 'AllowList' => '/etc/allowed' } } }
+
+        it { is_expected.to contain_file(allow_list_file) }
+        it { is_expected.to contain_file(config_file).with_content(%r{^AllowList /etc/allowed$}) }
       end
 
       context 'with the service stopped' do

@@ -22,10 +22,17 @@
 #     },
 #   }
 #
+# @example Do not scan the mail of some addresses
+#   class { 'clamav::milter':
+#     allow_list => ['From:^postmaster@example\.org$', 'To:^abuse@'],
+#   }
+#
 # @param config_file
 #   Path of the configuration file.
 # @param default_options
 #   Options the packaged service relies on, from the module data.
+# @param allow_list_file
+#   File holding `allow_list`.
 # @param package_name
 #   Name of the clamav-milter package, undef when the base package ships the
 #   milter.
@@ -33,6 +40,11 @@
 #   Ensure value of the package.
 # @param options
 #   Options merged over `default_options`. An undef value removes an option.
+# @param allow_list
+#   Senders and recipients whose mail is not scanned, as basic POSIX regular
+#   expressions, prefixed with `From:` for a sender or `To:` (the default)
+#   for a recipient. When not empty they are written to `allow_list_file`,
+#   which the `AllowList` option is set to.
 # @param service_name
 #   Name of the service.
 # @param manage_service
@@ -44,9 +56,11 @@
 class clamav::milter (
   Stdlib::Absolutepath $config_file,
   Clamav::Options $default_options,
+  Stdlib::Absolutepath $allow_list_file,
   Optional[String[1]] $package_name = undef,
   String[1] $package_ensure = 'installed',
   Clamav::Options $options = {},
+  Array[Pattern[/\A[^\r\n]+\z/]] $allow_list = [],
   String[1] $service_name = 'clamav-milter',
   Boolean $manage_service = true,
   Stdlib::Ensure::Service $service_ensure = 'running',
@@ -62,12 +76,31 @@ class clamav::milter (
     }
   }
 
+  if $allow_list.empty {
+    $allow_list_options = {}
+  } else {
+    file { $allow_list_file:
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0644',
+      content => "${(['# Managed by Puppet'] + $allow_list).join("\n")}\n",
+      require => Class['clamav::install'],
+    }
+
+    if $package_name {
+      Package[$package_name] -> File[$allow_list_file]
+    }
+
+    $allow_list_options = { 'AllowList' => $allow_list_file }
+  }
+
   file { $config_file:
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    content => clamav::to_config($default_options + $options),
+    content => clamav::to_config($default_options + $allow_list_options + $options),
     require => Class['clamav::install'],
   }
 
@@ -76,6 +109,10 @@ class clamav::milter (
       ensure    => $service_ensure,
       enable    => $service_enable,
       subscribe => File[$config_file],
+    }
+
+    unless $allow_list.empty {
+      File[$allow_list_file] ~> Service[$service_name]
     }
 
     if $package_name {

@@ -30,6 +30,7 @@ clamav::freshclam::default_options:
 
 clamav::milter::package_name: 'clamav-milter'
 clamav::milter::config_file: '/etc/mail/clamav-milter.conf'
+clamav::milter::allow_list_file: '/etc/mail/clamav-milter-allowlist.conf'
 clamav::milter::default_options:
   ClamdSocket: 'unix:/run/clamd.scan/clamd.sock'
   FixStaleSocket: true

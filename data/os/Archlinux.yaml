@@ -28,6 +28,7 @@ clamav::freshclam::default_options:
 
 clamav::milter::config_file: '/etc/clamav/clamav-milter.conf'
 clamav::milter::manage_service: false
+clamav::milter::allow_list_file: '/etc/clamav/clamav-milter-allowlist.conf'
 clamav::milter::default_options:
   ClamdSocket: 'unix:/run/clamav/clamd.ctl'
   LogFile: '/var/log/clamav/clamav-milter.log'
