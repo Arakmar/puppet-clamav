@@ -9,6 +9,12 @@ fixtures:
     epel:
       repo: "puppet/epel"
       ref: "6.0.0"
+    systemd:
+      repo: "puppet/systemd"
+      ref: "10.2.0"
+    inifile:
+      repo: "puppetlabs/inifile"
+      ref: "6.5.0"
     # The yumrepo type used by puppet/epel ships with the Puppet agent
     # packages, not with the puppet gem.
     yumrepo_core:

@@ -77,10 +77,13 @@ describe 'clamav::freshclam' do
         end
 
         it { is_expected.to contain_service('clamav-freshclam').with_ensure('running').with_enable(true).that_subscribes_to("File[#{config_file}]") }
+        it { is_expected.to contain_service('clamav-freshclam-once.timer').with_ensure('stopped').with_enable(false).that_requires('Class[clamav::install]') }
+        it { is_expected.to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf').with_ensure('absent') }
+        it { is_expected.to contain_file('/etc/systemd/system/clamav-freshclam-once.timer.d/puppet.conf').with_ensure('absent') }
 
         if expected[:package]
           it { is_expected.to contain_package(expected[:package]).with_ensure('installed').that_requires('Class[clamav::install]').that_comes_before("File[#{config_file}]") }
-          it { is_expected.to contain_package(expected[:package]).that_notifies('Service[clamav-freshclam]') }
+          it { is_expected.to contain_package(expected[:package]).that_notifies(['Service[clamav-freshclam]', 'Service[clamav-freshclam-once.timer]']) }
         else
           it { is_expected.to have_package_resource_count(1) }
         end
@@ -127,17 +130,67 @@ describe 'clamav::freshclam' do
       end
 
       context 'without validation nor service' do
-        let(:params) { { validate: false, manage_service: false } }
+        let(:params) { { validate: false, manage_service: false, mode: 'timer', on_calendar: 'hourly' } }
 
         it { is_expected.to compile.with_all_deps }
         it { is_expected.to contain_file(config_file).with_validate_cmd(nil) }
         it { is_expected.not_to contain_service('clamav-freshclam') }
+        it { is_expected.not_to contain_service('clamav-freshclam-once.timer') }
+        it { is_expected.not_to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf') }
       end
 
       context 'with the service stopped' do
         let(:params) { { service_ensure: 'stopped', service_enable: false } }
 
         it { is_expected.to contain_service('clamav-freshclam').with_ensure('stopped').with_enable(false) }
+        it { is_expected.to contain_service('clamav-freshclam-once.timer').with_ensure('stopped').with_enable(false) }
+      end
+
+      context 'with the packaged timer' do
+        let(:params) { { mode: 'timer' } }
+
+        it { is_expected.to compile.with_all_deps }
+        it { is_expected.to contain_service('clamav-freshclam').with_ensure('stopped').with_enable(false) }
+        it { is_expected.to contain_service('clamav-freshclam-once.timer').with_ensure('running').with_enable(true) }
+        it { is_expected.to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf').with_ensure('absent') }
+      end
+
+      context 'with the timer on a schedule' do
+        let(:params) do
+          {
+            mode: 'timer',
+            on_calendar: '*-*-* 03:30:00',
+            timer_entry: { 'RandomizedDelaySec' => 0, 'AccuracySec' => '1min' },
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+
+        it do
+          is_expected.to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf')
+            .with_ensure('present')
+            .with_unit('clamav-freshclam-once.timer')
+            .with_filename('puppet.conf')
+            .with_timer_entry('OnCalendar' => ['', '*-*-* 03:30:00'], 'RandomizedDelaySec' => 0, 'AccuracySec' => '1min')
+        end
+
+        it do
+          is_expected.to contain_file('/etc/systemd/system/clamav-freshclam-once.timer.d/puppet.conf')
+            .with_content(%r{^\[Timer\]\nOnCalendar=\nOnCalendar=\*-\*-\* 03:30:00\nRandomizedDelaySec=0\nAccuracySec=1min\n})
+            .that_notifies('Service[clamav-freshclam-once.timer]')
+        end
+      end
+
+      context 'with the timer on several schedules' do
+        let(:params) { { mode: 'timer', on_calendar: ['*-*-* 03:30:00', '*-*-* 15:30:00'] } }
+
+        it { is_expected.to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf').with_timer_entry('OnCalendar' => ['', '*-*-* 03:30:00', '*-*-* 15:30:00']) }
+      end
+
+      context 'with a schedule in daemon mode' do
+        let(:params) { { on_calendar: 'hourly' } }
+
+        it { is_expected.to contain_systemd__manage_dropin('clamav-freshclam-once.timer-puppet.conf').with_ensure('absent') }
       end
     end
   end

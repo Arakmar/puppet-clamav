@@ -15,6 +15,10 @@
     {
       "name": "puppet/epel",
       "version_requirement": ">= 5.0.0 < 7.0.0"
+    },
+    {
+      "name": "puppet/systemd",
+      "version_requirement": ">= 8.2.0 < 11.0.0"
     }
   ],
   "operatingsystem_support": [
