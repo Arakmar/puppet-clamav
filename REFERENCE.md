@@ -107,7 +107,10 @@ Shell of `user`.
 
 Data type: `Boolean`
 
-Whether to set up EPEL, where the RedHat family gets ClamAV from.
+Whether to set up EPEL, where the RedHat family gets ClamAV from. The
+module data enables it on the RedHat family only.
+
+Default value: `false`
 
 ##### <a name="-clamav--package_name"></a>`package_name`
 
@@ -629,7 +632,7 @@ which removes a default of the module.
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 { 'MaxThreads' => 4, 'ScanPDF' => true, 'ExcludePath' => ['^/proc/', '^/sys/'], 'LogSyslog' => undef }
@@ -646,7 +649,7 @@ lines.
 
 #### Examples
 
-##### 
+#####
 
 ```puppet
 true
@@ -656,4 +659,3 @@ true
 ```
 
 Alias of `Variant[Boolean, Integer, Pattern[/\A[^\r\n]+\z/], Array[Variant[Integer, Pattern[/\A[^\r\n]+\z/]], 1]]`
-

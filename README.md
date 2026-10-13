@@ -40,11 +40,13 @@ the daemons check theirs before it is replaced.
 
 ### Requirements
 
-* Puppet 8 or OpenVox 8.
+* OpenVox 8 or 9. Perforce Puppet 8 is no longer tested.
 * [puppetlabs/stdlib](https://forge.puppet.com/modules/puppetlabs/stdlib)
   9.x or 10.x, [puppet/systemd](https://forge.puppet.com/modules/puppet/systemd)
   8.2 or later and, on the RedHat family,
   [puppet/epel](https://forge.puppet.com/modules/puppet/epel) 5.x or 6.x.
+  Their current releases (10.2.0 and 6.0.0) do not declare OpenVox 9 yet,
+  the module is unit tested on OpenVox 9 with them.
 * systemd. The packaged releases of ClamAV are:
 
   | Distribution          | ClamAV | Notes                         |
@@ -54,9 +56,9 @@ the daemons check theirs before it is replaced.
   | Ubuntu 22.04 and 24.04| 1.5.4  |                               |
   | Arch Linux            | 1.5.4  | no unit for clamav-milter     |
 
-The module is unit tested on EL 8 to 10 (RHEL, CentOS Stream, Rocky,
-AlmaLinux), Debian 12 and 13, Ubuntu 22.04 and 24.04 and Arch Linux, and
-its configuration files are checked by ClamAV 1.4 and 1.5.
+The module is unit tested with OpenVox 8 and 9 on EL 8 to 10 (RHEL, CentOS
+Stream, Rocky, AlmaLinux), Debian 12 and 13, Ubuntu 22.04 and 24.04 and Arch
+Linux, and its configuration files are checked by ClamAV 1.4 and 1.5.
 
 ### Beginning with clamav
 
@@ -288,10 +290,17 @@ A freshclam daemon stopped in favour of a cron job can become
 
 ## Development
 
+The tooling is the one of Vox Pupuli
+([voxpupuli-test](https://github.com/voxpupuli/voxpupuli-test) and
+[voxpupuli-release](https://github.com/voxpupuli/voxpupuli-release)) and runs
+on OpenVox, set `OPENVOX_GEM_VERSION` to pick its version:
+
 ```
-pdk validate
-pdk test unit
-pdk bundle exec rake strings:generate:reference
+bundle install
+bundle exec rake validate lint check rubocop
+bundle exec rake parallel_spec
+bundle exec rake strings:generate:reference
+bundle exec rake module:build
 ```
 
 When ClamAV is installed, the unit tests also check the rendered files with
@@ -300,10 +309,10 @@ other executables to test another release, and set `CLAMAV_VALIDATE` to
 fail rather than skip when they are missing.
 
 GitHub Actions run the static validations, RuboCop, a REFERENCE.md freshness
-check and the unit tests on every pull request and push to `master`, and
-check the rendered files with ClamAV 1.4.6, 1.5.4 and the latest release
-(`.github/workflows/ci.yml`, modelled on the
-[Vox Pupuli](https://github.com/voxpupuli/gha-puppet) workflows).
+check and the unit tests on OpenVox 8 (Ruby 3.2) and 9 (Ruby 4.0) through the
+[Vox Pupuli](https://github.com/voxpupuli/gha-puppet) reusable workflow on
+every pull request and push to `master`, and check the rendered files with
+ClamAV 1.4.6, 1.5.4 and the latest release (`.github/workflows/ci.yml`).
 
 Pushing a `v<version>` tag runs the CI on the tagged commit, then publishes
 the module to the Puppet Forge and creates a GitHub release through the Vox

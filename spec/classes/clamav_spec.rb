@@ -5,14 +5,16 @@ require 'spec_helper'
 describe 'clamav' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
-      let(:facts) { os_facts }
-
       redhat = os_facts[:os]['family'] == 'RedHat'
-      user = {
-        'Archlinux' => { name: 'clamav', home: '/', shell: '/usr/bin/nologin' },
-        'Debian' => { name: 'clamav', home: '/var/lib/clamav', shell: '/bin/false' },
-        'RedHat' => { name: 'clamscan', home: '/', shell: (os_facts[:os]['release']['major'] == '8') ? '/sbin/nologin' : '/usr/sbin/nologin' },
-      }.fetch(os_facts[:os]['family'])
+
+      let(:facts) { os_facts }
+      let(:user) do
+        {
+          'Archlinux' => { name: 'clamav', home: '/', shell: '/usr/bin/nologin' },
+          'Debian' => { name: 'clamav', home: '/var/lib/clamav', shell: '/bin/false' },
+          'RedHat' => { name: 'clamscan', home: '/', shell: (facts[:os]['release']['major'] == '8') ? '/sbin/nologin' : '/usr/sbin/nologin' },
+        }.fetch(facts[:os]['family'])
+      end
 
       context 'with default parameters' do
         it { is_expected.to compile.with_all_deps }
@@ -74,7 +76,7 @@ describe 'clamav' do
             uid: 496,
             gid: 497,
             comment: 'ClamAV',
-            groups: ['amavis', 'postfix'],
+            groups: %w[amavis postfix],
             home: '/var/lib/av',
             shell: '/sbin/nologin',
           }
@@ -87,7 +89,7 @@ describe 'clamav' do
           is_expected.to contain_user('av')
             .with_uid(496)
             .with_gid('av')
-            .with_groups(['amavis', 'postfix'])
+            .with_groups(%w[amavis postfix])
             .with_comment('ClamAV')
             .with_home('/var/lib/av')
             .with_shell('/sbin/nologin')

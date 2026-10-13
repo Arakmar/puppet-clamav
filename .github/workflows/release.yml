@@ -3,8 +3,8 @@
 # v<semver> tag is pushed. The tagged commit first goes through the whole CI
 # (ci.yml) and the tag must match the version of metadata.json. Publishing
 # reuses the Vox Pupuli workflow (https://github.com/voxpupuli/gha-puppet),
-# which runs `rake module:push` from puppet-blacksmith, provided by the PDK
-# Gemfile.
+# which runs `rake module:push` from puppet-blacksmith, provided by the
+# voxpupuli-release gem of the release group.
 #
 # Requirements on the repository:
 #   - a `release` environment,

@@ -29,7 +29,8 @@
 # @param shell
 #   Shell of `user`.
 # @param manage_repo
-#   Whether to set up EPEL, where the RedHat family gets ClamAV from.
+#   Whether to set up EPEL, where the RedHat family gets ClamAV from. The
+#   module data enables it on the RedHat family only.
 # @param package_name
 #   Name of the base package.
 # @param package_ensure

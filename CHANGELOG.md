@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Release 3.0.0
 
 First release published as `arakmar-clamav`, the continuation of
-edestecd-clamav 2.0.0, rewritten for Puppet 8 and the ClamAV packages of
-current distributions. See the upgrade table of the README.
+edestecd-clamav 2.0.0, rewritten for OpenVox 8 and 9 and the ClamAV packages
+of current distributions. See the upgrade table of the README.
 
 **Breaking changes**
 
-* Puppet 8 (or OpenVox 8), puppetlabs/stdlib 9.x or 10.x, puppet/systemd
+* OpenVox 8 or 9, puppetlabs/stdlib 9.x or 10.x, puppet/systemd
   >= 8.2.0 and, on the RedHat family, puppet/epel 5.x or 6.x are required.
   Supported systems are EL 8 to 10, Debian 12 and 13, Ubuntu 22.04 and
   24.04 and Arch Linux; EL 6 and 7, Debian 8 and 9 and Ubuntu 14.04 and
@@ -55,8 +55,9 @@ current distributions. See the upgrade table of the README.
   `allow_list`.
 * `manage_service` on each component, for example where the service is run
   by something else.
-* Type aliases, puppet-strings documentation (REFERENCE.md), rspec-puppet
-  tests checking the rendered files with ClamAV 1.4 and 1.5, GitHub Actions
+* Type aliases, openvox-strings documentation (REFERENCE.md), rspec-puppet
+  tests on OpenVox 8 and 9 checking the rendered files with ClamAV 1.4 and
+  1.5, Vox Pupuli tooling (voxpupuli-test, voxpupuli-release), GitHub Actions
   CI and Forge release workflows.
 
 **Bugfixes**
