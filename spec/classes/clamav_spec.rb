@@ -1,115 +1,96 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
-describe 'clamav', type: :class do
-  on_supported_os.each do |os, facts|
+describe 'clamav' do
+  on_supported_os.each do |os, os_facts|
     context "on #{os}" do
-      let(:facts) do
-        facts.merge(environment: 'test')
-      end
+      let(:facts) { os_facts }
 
-      context 'with defaults' do
+      redhat = os_facts[:os]['family'] == 'RedHat'
+      user = {
+        'Archlinux' => { name: 'clamav', home: '/', shell: '/usr/bin/nologin' },
+        'Debian' => { name: 'clamav', home: '/var/lib/clamav', shell: '/bin/false' },
+        'RedHat' => { name: 'clamscan', home: '/', shell: (os_facts[:os]['release']['major'] == '8') ? '/sbin/nologin' : '/usr/sbin/nologin' },
+      }.fetch(os_facts[:os]['family'])
+
+      context 'with default parameters' do
         it { is_expected.to compile.with_all_deps }
-        if facts[:osfamily] == 'RedHat'
-          it { is_expected.to contain_class('epel') }
-        elsif facts[:osfamily] == 'Debian'
-          it { is_expected.not_to contain_class('epel') }
-        end
-        it { is_expected.not_to contain_class('clamav::user') }
         it { is_expected.to contain_class('clamav::install') }
+        it { is_expected.to contain_package('clamav').with_ensure('installed') }
+        it { is_expected.not_to contain_class('clamav::user') }
+        it { is_expected.not_to contain_user(user[:name]) }
         it { is_expected.not_to contain_class('clamav::clamd') }
         it { is_expected.not_to contain_class('clamav::freshclam') }
+        it { is_expected.not_to contain_class('clamav::milter') }
+
+        if redhat
+          it { is_expected.to contain_class('epel').that_comes_before('Package[clamav]') }
+        else
+          it { is_expected.not_to contain_class('epel') }
+        end
       end
 
-      context 'manage user' do
-        let(:params) { { manage_user: true } }
-
-        it { is_expected.to contain_class('clamav::user') }
-      end
-
-      context 'disable epel on RedHat' do
+      context 'without the repository' do
         let(:params) { { manage_repo: false } }
 
+        it { is_expected.to compile.with_all_deps }
         it { is_expected.not_to contain_class('epel') }
       end
 
-      context 'manage clamd and freshclam' do
-        let(:params) { { manage_clamd: true, manage_freshclam: true } }
+      context 'with another package' do
+        let(:params) { { package_name: 'clamav-custom', package_ensure: 'latest' } }
 
-        it { is_expected.to contain_class('clamav::clamd') }
-        it { is_expected.to contain_class('clamav::freshclam') }
+        it { is_expected.to contain_package('clamav-custom').with_ensure('latest') }
+        it { is_expected.not_to contain_package('clamav') }
       end
 
-      context 'manage manage_clamav_milter' do
-        if facts[:osfamily] == 'RedHat' && facts[:operatingsystemrelease] >= '7.0'
-          let(:params) { { manage_clamav_milter: true } }
-
-          it { is_expected.to contain_class('clamav::clamav_milter') }
-        end
-      end
-
-      context 'clamav::user' do
+      context 'with the user managed' do
         let(:params) { { manage_user: true } }
 
-        context 'with defaults' do
-          it { is_expected.to contain_group('clamav') }
-          it { is_expected.to contain_user('clamav') }
-        end
-        context 'disable group and user' do
-          let(:params) { { manage_user: true, group: false, user: false } }
+        it { is_expected.to compile.with_all_deps }
+        it { is_expected.to contain_class('clamav::user').that_comes_before('Class[clamav::install]') }
+        it { is_expected.to contain_group(user[:name]).with_ensure('present').with_gid(nil).with_system(true) }
 
-          it { is_expected.not_to contain_group('clamav') }
-          it { is_expected.not_to contain_user('clamav') }
-        end
-      end
-
-      context 'clamav::install' do
-        context 'with defaults' do
-          it { is_expected.to contain_package('clamav') }
-        end
-      end
-
-      context 'clamav::clamd' do
-        let(:params) { { manage_clamd: true } }
-
-        context 'with defaults' do
-          it { is_expected.to contain_package('clamd') }
-          it { is_expected.to contain_file('clamd.conf') }
-          it { is_expected.to contain_service('clamd') }
+        it do
+          is_expected.to contain_user(user[:name])
+            .with_ensure('present')
+            .with_uid(nil)
+            .with_gid(user[:name])
+            .with_groups([])
+            .with_comment(nil)
+            .with_home(user[:home])
+            .with_shell(user[:shell])
+            .with_system(true)
         end
       end
 
-      context 'clamav::freshclam' do
-        let(:params) { { manage_freshclam: true } }
+      context 'with the user managed with fixed identifiers' do
+        let(:params) do
+          {
+            manage_user: true,
+            user: 'av',
+            group: 'av',
+            uid: 496,
+            gid: 497,
+            comment: 'ClamAV',
+            groups: ['amavis', 'postfix'],
+            home: '/var/lib/av',
+            shell: '/sbin/nologin',
+          }
+        end
 
-        context 'with defaults' do
-          if facts[:osfamily] == 'RedHat'
-            if facts[:operatingsystemmajrelease].to_i == 6
-              it 'is valid when there is no freshclam package' do
-                is_expected.not_to contain_package('freshclam')
-              end
-              it 'is valid when there no file freshclam_sysconfig' do
-                is_expected.not_to contain_file('freshclam_sysconfig')
-              end
-            elsif facts[:operatingsystemmajrelease].to_i == 7
-              it 'is valid when there is freshclam package' do
-                is_expected.to contain_package('freshclam')
-              end
-              it 'is valid when there is freshclam_sysconfig file' do
-                is_expected.to contain_file('freshclam_sysconfig')
-              end
-            end
-            it 'is valid when there is freshclam.conf file' do
-              is_expected.to contain_file('freshclam.conf')
-            end
-            it 'is valid when there is no freshclam service' do
-              is_expected.not_to contain_service('freshclam')
-            end
-          elsif facts[:osfamily] == 'Debian'
-            it { is_expected.to contain_package('freshclam') }
-            it { is_expected.to contain_file('freshclam.conf') }
-            it { is_expected.to contain_service('freshclam') }
-            it { is_expected.not_to contain_file('freshclam_sysconfig') }
-          end
+        it { is_expected.to compile.with_all_deps }
+        it { is_expected.to contain_group('av').with_gid(497) }
+
+        it do
+          is_expected.to contain_user('av')
+            .with_uid(496)
+            .with_gid('av')
+            .with_groups(['amavis', 'postfix'])
+            .with_comment('ClamAV')
+            .with_home('/var/lib/av')
+            .with_shell('/sbin/nologin')
         end
       end
     end
