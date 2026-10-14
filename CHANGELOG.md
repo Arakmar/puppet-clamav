@@ -2,8 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
-## Next (2.0.1)  Chris Edester
-* PDK 1.18.1
+## Release 3.0.0
+
+First release published as `arakmar-clamav`, the continuation of
+edestecd-clamav 2.0.0, rewritten for OpenVox 8 and 9 and the ClamAV packages
+of current distributions. See the upgrade table of the README.
+
+**Breaking changes**
+
+* OpenVox 8 or 9, puppetlabs/stdlib 9.x or 10.x, puppet/systemd
+  >= 8.2.0 and, on the RedHat family, puppet/epel 5.x or 6.x are required.
+  Supported systems are EL 8 to 10, Debian 12 and 13, Ubuntu 22.04 and
+  24.04 and Arch Linux; EL 6 and 7, Debian 8 and 9 and Ubuntu 14.04 and
+  16.04 are dropped.
+* The `manage_clamd`, `manage_freshclam` and `manage_clamav_milter`
+  switches and the prefixed parameters of class `clamav` give way to the
+  `clamav::clamd`, `clamav::freshclam` and `clamav::milter` classes
+  (`clamav::clamav_milter` is renamed), each with `package_name`,
+  `package_ensure`, `config_file`, `options`, `service_name`,
+  `service_ensure` and `service_enable`. `clamav_package` and
+  `clamav_version` become `package_name` and `package_ensure`.
+  `params.pp` is replaced by module data.
+* The default options only hold what the packaged services rely on
+  (sockets, users, log and pid files, database directory and mirror)
+  instead of the Debian 7 configuration applied to every distribution:
+  ClamAV defaults apply to everything else, for example `MaxThreads`,
+  `StreamMaxLength`, `MaxScanSize` and `MaxFileSize`. Booleans are written
+  `yes`/`no`. Option names and values are typed, so the `# comment` keys
+  the template used to accept are refused.
+* The RedHat family uses the package names of EPEL 8+ (`clamd`,
+  `clamav-freshclam`, `clamav-milter`) rather than the EL 7 names they
+  provide, and its milter listens on the local
+  socket of the package instead of `inet:8890@localhost`, connecting to the
+  local clamd socket instead of `tcp:127.0.0.1`. `freshclam_sysconfig` and
+  `freshclam_delay` (EL 7) are removed.
+* `uid` and `gid` default to undef (system identifiers) instead of 496,
+  `groups` is an array, and `user => false`/`group => false` are replaced
+  by `manage_user`, which manages both.
+* Packages, files and services are titled after their names and paths
+  instead of `clamd`, `freshclam`, `clamav_milter`, `clamd.conf`...
+* The Beaker acceptance tests and the Travis configuration are removed.
+
+**Features**
+
+* Arch Linux support.
+* clamd and freshclam check their configuration file before it is
+  replaced (`validate`).
+* `clamav::freshclam` can run from the packaged
+  `clamav-freshclam-once.timer` instead of the daemon (`mode => 'timer'`),
+  on a schedule set by `on_calendar` and `timer_entry`.
+* `clamav::milter` manages the file of its `AllowList` option from
+  `allow_list`.
+* `manage_service` on each component, for example where the service is run
+  by something else.
+* Type aliases, openvox-strings documentation (REFERENCE.md), rspec-puppet
+  tests on OpenVox 8 and 9 checking the rendered files with ClamAV 1.4 and
+  1.5, Vox Pupuli tooling (voxpupuli-test, voxpupuli-release), GitHub Actions
+  CI and Forge release workflows.
+
+**Bugfixes**
+
+* The default options no longer use the options deprecated since ClamAV
+  0.101 (`AlgorithmicDetection`, `ArchiveBlockEncrypted`,
+  `OLE2BlockMacros`, `PhishingAlwaysBlockSSLMismatch`,
+  `PhishingAlwaysBlockCloak`) nor the obsolete `db.local.clamav.net`
+  mirror.
+* `/etc/sysconfig/freshclam` is no longer written on EL 8+, where nothing
+  reads it.
 
 ## 2020-08-25 (2.0.0)  Chris Edester
 * PDK support at 1.18.0

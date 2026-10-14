@@ -1,77 +1,80 @@
 {
-  "name": "edestecd-clamav",
-  "version": "2.0.1",
-  "author": "Chris Edester",
-  "summary": "Puppet Module for managing ClamAV",
-  "license": "GPL-3.0+",
-  "source": "https://github.com/edestecd/puppet-clamav.git",
-  "project_page": "https://github.com/edestecd/puppet-clamav",
-  "issues_url": "https://github.com/edestecd/puppet-clamav/issues",
+  "name": "arakmar-clamav",
+  "version": "3.0.0",
+  "author": "Yoann Laissus",
+  "summary": "ClamAV scanner daemon, freshclam updater and milter",
+  "license": "GPL-3.0-or-later",
+  "source": "https://github.com/Arakmar/puppet-clamav",
+  "project_page": "https://github.com/Arakmar/puppet-clamav",
+  "issues_url": "https://github.com/Arakmar/puppet-clamav/issues",
   "dependencies": [
     {
       "name": "puppetlabs/stdlib",
-      "version_requirement": ">= 4.13.0 < 7.0.0"
+      "version_requirement": ">= 9.0.0 < 11.0.0"
     },
     {
       "name": "puppet/epel",
-      "version_requirement": ">= 3.0.0 < 4.0.0"
+      "version_requirement": ">= 5.0.0 < 7.0.0"
+    },
+    {
+      "name": "puppet/systemd",
+      "version_requirement": ">= 8.2.0 < 11.0.0"
     }
   ],
   "operatingsystem_support": [
     {
       "operatingsystem": "RedHat",
       "operatingsystemrelease": [
-        "6",
-        "7"
+        "8",
+        "9",
+        "10"
       ]
     },
     {
       "operatingsystem": "CentOS",
       "operatingsystemrelease": [
-        "6",
-        "7"
+        "9",
+        "10"
       ]
     },
     {
-      "operatingsystem": "OracleLinux",
+      "operatingsystem": "Rocky",
       "operatingsystemrelease": [
-        "6",
-        "7"
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    {
+      "operatingsystem": "AlmaLinux",
+      "operatingsystemrelease": [
+        "8",
+        "9",
+        "10"
       ]
     },
     {
       "operatingsystem": "Debian",
       "operatingsystemrelease": [
-        "8",
-        "9"
+        "12",
+        "13"
       ]
     },
     {
       "operatingsystem": "Ubuntu",
       "operatingsystemrelease": [
-        "14.04",
-        "16.04"
+        "22.04",
+        "24.04"
       ]
+    },
+    {
+      "operatingsystem": "Archlinux"
     }
   ],
   "requirements": [
     {
-      "name": "puppet",
-      "version_requirement": ">= 4.7.0 < 6.0.0"
+      "name": "openvox",
+      "version_requirement": ">= 8.0.0 < 10.0.0"
     }
-  ],
-  "tags": [
-    "clam",
-    "clamav",
-    "clamscan",
-    "clamdscan",
-    "clamd",
-    "freshclam",
-    "virus",
-    "antivirus"
-  ],
-  "description": "Puppet Module to install/configure clamd and freshclam",
-  "pdk-version": "1.18.1",
-  "template-url": "https://github.com/puppetlabs/pdk-templates#1.18.1",
-  "template-ref": "tags/1.18.1-0-g3d2e75c"
+  ]
 }

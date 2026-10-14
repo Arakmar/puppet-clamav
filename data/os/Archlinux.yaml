@@ -1,0 +1,40 @@
+---
+# Arch Linux: one clamav package, clamd socket activated by
+# clamav-daemon.socket on /run/clamav/clamd.ctl. logrotate signals the
+# daemons through their PidFile. No unit is shipped for the milter.
+clamav::user: 'clamav'
+clamav::group: 'clamav'
+clamav::home: '/'
+clamav::shell: '/usr/bin/nologin'
+
+clamav::clamd::config_file: '/etc/clamav/clamd.conf'
+clamav::clamd::service_name: 'clamav-daemon'
+clamav::clamd::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  LocalSocket: '/run/clamav/clamd.ctl'
+  LogFile: '/var/log/clamav/clamd.log'
+  LogTime: true
+  PidFile: '/run/clamav/clamd.pid'
+  User: 'clamav'
+
+clamav::freshclam::config_file: '/etc/clamav/freshclam.conf'
+clamav::freshclam::default_options:
+  DatabaseDirectory: '/var/lib/clamav'
+  DatabaseMirror: 'database.clamav.net'
+  DatabaseOwner: 'clamav'
+  LogTime: true
+  PidFile: '/run/clamav/freshclam.pid'
+  UpdateLogFile: '/var/log/clamav/freshclam.log'
+
+clamav::milter::config_file: '/etc/clamav/clamav-milter.conf'
+clamav::milter::manage_service: false
+clamav::milter::allow_list_file: '/etc/clamav/clamav-milter-allowlist.conf'
+clamav::milter::default_options:
+  ClamdSocket: 'unix:/run/clamav/clamd.ctl'
+  LogFile: '/var/log/clamav/clamav-milter.log'
+  LogTime: true
+  MilterSocket: '/run/clamav/clamav-milter.sock'
+  MilterSocketGroup: 'clamav'
+  MilterSocketMode: '660'
+  PidFile: '/run/clamav/clamav-milter.pid'
+  User: 'clamav'

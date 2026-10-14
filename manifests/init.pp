@@ -1,100 +1,71 @@
-# init.pp
-# Main class of clamav
-# Declare main config here
+# @summary Installs ClamAV
 #
-# http://www.clamav.net
-# http://www.clamxav.com
+# Installs the base package, with the command line scanner and the
+# libraries, from EPEL on the RedHat family. The daemons are managed by
+# their own classes, which include this one: clamav::clamd,
+# clamav::freshclam and clamav::milter.
 #
-
+# The OS-specific defaults come from the module data.
+#
+# @example The command line scanner only
+#   include clamav
+#
+# @example The scanner daemon and its database updates
+#   include clamav::clamd
+#   include clamav::freshclam
+#
+# @example Add the ClamAV user to the group of an MTA filter
+#   class { 'clamav':
+#     manage_user => true,
+#     groups      => ['amavis'],
+#   }
+#
+# @param user
+#   ClamAV user, managed with `manage_user`.
+# @param group
+#   Primary group of `user`.
+# @param home
+#   Home directory of `user`.
+# @param shell
+#   Shell of `user`.
+# @param manage_repo
+#   Whether to set up EPEL, where the RedHat family gets ClamAV from. The
+#   module data enables it on the RedHat family only.
+# @param package_name
+#   Name of the base package.
+# @param package_ensure
+#   Ensure value of the base package.
+# @param manage_user
+#   Whether to manage `user` and `group`, before the packages create them.
+#   For example to give them fixed identifiers or supplementary groups.
+# @param uid
+#   UID of `user`, a system UID is allocated when undef.
+# @param gid
+#   GID of `group`, a system GID is allocated when undef.
+# @param comment
+#   Comment of `user`.
+# @param groups
+#   Supplementary groups of `user`. The groups it already belongs to are
+#   kept.
 class clamav (
-  Boolean $manage_user          = $clamav::params::manage_user,
-  Boolean $manage_repo          = $clamav::params::manage_repo,
-  Boolean $manage_clamd         = $clamav::params::manage_clamd,
-  Boolean $manage_freshclam     = $clamav::params::manage_freshclam,
-  Boolean $manage_clamav_milter = $clamav::params::manage_clamav_milter,
-  String $clamav_package        = $clamav::params::clamav_package,
-  String $clamav_version        = $clamav::params::clamav_version,
-
-  $user                         = $clamav::params::user,
-  Optional[String] $comment     = $clamav::params::comment,
-  $uid                          = $clamav::params::uid,
-  $gid                          = $clamav::params::gid,
-  Stdlib::Absolutepath $home    = $clamav::params::home,
-  Stdlib::Absolutepath $shell   = $clamav::params::shell,
-  $group                        = $clamav::params::group,
-  $groups                       = $clamav::params::groups,
-
-  String $clamd_package         = $clamav::params::clamd_package,
-  String $clamd_version         = $clamav::params::clamd_version,
-  Stdlib::Absolutepath $clamd_config = $clamav::params::clamd_config,
-  String $clamd_service         = $clamav::params::clamd_service,
-  $clamd_service_ensure         = $clamav::params::clamd_service_ensure,
-  Boolean $clamd_service_enable = $clamav::params::clamd_service_enable,
-  Hash $clamd_options           = $clamav::params::clamd_options,
-
-  $freshclam_package            = $clamav::params::freshclam_package,
-  $freshclam_version            = $clamav::params::freshclam_version,
-  Stdlib::Absolutepath $freshclam_config = $clamav::params::freshclam_config,
-  $freshclam_service            = $clamav::params::freshclam_service,
-  $freshclam_service_ensure     = $clamav::params::freshclam_service_ensure,
-  Boolean $freshclam_service_enable = $clamav::params::freshclam_service_enable,
-  Hash $freshclam_options       = $clamav::params::freshclam_options,
-  Optional[Stdlib::Absolutepath] $freshclam_sysconfig = $clamav::params::freshclam_sysconfig,
-  Optional[String] $freshclam_delay = $clamav::params::freshclam_delay,
-
-  $clamav_milter_package        = $clamav::params::clamav_milter_package,
-  $clamav_milter_version        = $clamav::params::clamav_milter_version,
-  $clamav_milter_config         = $clamav::params::clamav_milter_config,
-  $clamav_milter_service        = $clamav::params::clamav_milter_service,
-  $clamav_milter_service_ensure = $clamav::params::clamav_milter_service_ensure,
-  $clamav_milter_service_enable = $clamav::params::clamav_milter_service_enable,
-  $clamav_milter_options        = $clamav::params::clamav_milter_options,
-) inherits clamav::params {
-
-  # clamd
-  $_clamd_options = merge($clamav::params::clamd_default_options, $clamd_options)
-
-  # freshclam
-  $_freshclam_options = merge($clamav::params::freshclam_default_options, $freshclam_options)
-
-  # clamav_milter
-  if $manage_clamav_milter {
-    assert_type(String, $clamav_milter_package)
-    assert_type(String, $clamav_milter_version)
-    assert_type(Stdlib::Absolutepath, $clamav_milter_config)
-    assert_type(String, $clamav_milter_service)
-    assert_type(Boolean, $clamav_milter_service_enable)
-    assert_type(Hash, $clamav_milter_options)
-    $_clamav_milter_options = merge($clamav::params::clamav_milter_default_options, $clamav_milter_options)
-  }
-
-  if $manage_repo { require 'epel' }
+  String[1] $user,
+  String[1] $group,
+  Stdlib::Absolutepath $home,
+  Stdlib::Absolutepath $shell,
+  Boolean $manage_repo,
+  String[1] $package_name = 'clamav',
+  String[1] $package_ensure = 'installed',
+  Boolean $manage_user = false,
+  Optional[Integer[0]] $uid = undef,
+  Optional[Integer[0]] $gid = undef,
+  Optional[String[1]] $comment = undef,
+  Array[String[1]] $groups = [],
+) {
+  contain clamav::install
 
   if $manage_user {
-    Anchor['clamav::begin']
-    -> class { 'clamav::user': }
-    -> Class['clamav::install']
-  }
+    contain clamav::user
 
-  if $manage_clamd {
-    Class['clamav::install']
-    -> class { 'clamav::clamd': }
-    -> Anchor['clamav::end']
+    Class['clamav::user'] -> Class['clamav::install']
   }
-
-  if $manage_freshclam {
-    Class['clamav::install']
-    -> class { 'clamav::freshclam': }
-    -> Anchor['clamav::end']
-  }
-
-  if $manage_clamav_milter {
-    Class['clamav::install']
-    -> class { 'clamav::clamav_milter': }
-    -> Anchor['clamav::end']
-  }
-
-  anchor { 'clamav::begin': }
-  -> class { 'clamav::install': }
-  -> anchor { 'clamav::end': }
 }

@@ -3,9 +3,20 @@
 ---
 fixtures:
   forge_modules:
-    stdlib: "puppetlabs/stdlib"
-    epel: "puppet/epel"
-    # Extracted from core in puppet 6
-    yumrepo_core: "puppetlabs/yumrepo_core"
-  symlinks:
-    clamav: "#{source_dir}"
+    stdlib:
+      repo: "puppetlabs/stdlib"
+      ref: "10.1.0"
+    epel:
+      repo: "puppet/epel"
+      ref: "6.0.0"
+    systemd:
+      repo: "puppet/systemd"
+      ref: "10.2.0"
+    inifile:
+      repo: "puppetlabs/inifile"
+      ref: "6.5.0"
+    # The yumrepo type used by puppet/epel ships with the Puppet agent
+    # packages, not with the puppet gem.
+    yumrepo_core:
+      repo: "puppetlabs/yumrepo_core"
+      ref: "3.1.0"
