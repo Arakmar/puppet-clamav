@@ -304,9 +304,10 @@ bundle exec rake module:build
 ```
 
 When ClamAV is installed, the unit tests also check the rendered files with
-clamd, freshclam and clamconf; point `CLAMD`, `FRESHCLAM` and `CLAMCONF` at
-other executables to test another release, and set `CLAMAV_VALIDATE` to
-fail rather than skip when they are missing.
+clamd, freshclam and clamconf (the examples tagged `clamav`, left out
+otherwise); point `CLAMD`, `FRESHCLAM` and `CLAMCONF` at other executables to
+test another release, and set `CLAMAV_VALIDATE` to fail rather than leave them
+out when they are missing.
 
 GitHub Actions run the static validations, RuboCop, a REFERENCE.md freshness
 check and the unit tests on OpenVox 8 (Ruby 3.2) and 9 (Ruby 4.0) through the

@@ -27,7 +27,7 @@ describe 'clamav::clamd' do
     }
   end
 
-  context 'validated by ClamAV' do
+  context 'validated by ClamAV', :clamav do
     it 'rejects an unknown option' do
       expect(expect_valid_for_clamav('clamd', "LocalSocket /run/clamd.sock\nUnknownOption yes\n", valid: false)).to include('Unknown option UnknownOption')
     end
@@ -119,7 +119,7 @@ describe 'clamav::clamd' do
           it { is_expected.to contain_package(expected[:package]).that_notifies("Service[#{expected[:service]}]") }
         end
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('clamd', rendered_content(expected[:config_file])) }
         end
       end
@@ -147,7 +147,7 @@ describe 'clamav::clamd' do
         it { is_expected.to contain_file(expected[:config_file]).with_content(%r{^TCPAddr 127\.0\.0\.1\nTCPAddr ::1\nTCPSocket 3310\nUser scanner\n\z}) }
         it { is_expected.to contain_file(expected[:config_file]).without_content(%r{^LogTime}).without_content(%r{^User clam}) }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('clamd', rendered_content(expected[:config_file])) }
         end
       end
@@ -157,7 +157,7 @@ describe 'clamav::clamd' do
 
         it { is_expected.to contain_file(expected[:config_file]).with_content(%r{\A# Managed by Puppet\nAlgorithmicDetection yes\nAllowAllMatchScan yes\n}) }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('clamd', rendered_content(expected[:config_file])) }
         end
       end
