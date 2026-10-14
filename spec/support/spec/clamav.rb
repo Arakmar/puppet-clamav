@@ -62,4 +62,8 @@ end
 
 RSpec.configure do |c|
   c.include ClamavSpecHelpers
+  # Without ClamAV the checks, tagged :clamav, are left out rather than
+  # skipped one by one: the CI jobs installing ClamAV run them. With
+  # CLAMAV_VALIDATE a missing executable fails them instead.
+  c.filter_run_excluding(:clamav) unless ENV['CLAMAV_VALIDATE'] || %w[clamd freshclam clamconf].any? { |program| ClamavSpecHelpers.executable(program) }
 end

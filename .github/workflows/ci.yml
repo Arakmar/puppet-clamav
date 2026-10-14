@@ -73,7 +73,7 @@ jobs:
       - name: Validate the rendered configurations with ClamAV
         run: |
           bundle exec rake fixtures:prep
-          bundle exec rspec spec/classes --example 'validated by ClamAV'
+          bundle exec rspec spec/classes --tag clamav
 
   tests:
     name: Test suite

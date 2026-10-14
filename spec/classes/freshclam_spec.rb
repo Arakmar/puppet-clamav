@@ -14,7 +14,7 @@ describe 'clamav::freshclam' do
     }
   end
 
-  context 'validated by ClamAV' do
+  context 'validated by ClamAV', :clamav do
     it 'rejects an unknown option' do
       expect(expect_valid_for_clamav('freshclam', "DatabaseMirror database.clamav.net\nUnknownOption yes\n", valid: false)).to include('Unknown option UnknownOption')
     end
@@ -94,7 +94,7 @@ describe 'clamav::freshclam' do
           it { is_expected.to contain_package(expected[:package]).that_notifies(['Service[clamav-freshclam]', 'Service[clamav-freshclam-once.timer]']) }
         end
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('freshclam', rendered_content(expected[:config_file])) }
         end
       end
@@ -120,7 +120,7 @@ describe 'clamav::freshclam' do
         it { is_expected.to contain_file(expected[:config_file]).with_content(%r{^HTTPProxyPort 3128\nHTTPProxyServer proxy\.example\.org$}) }
         it { is_expected.to contain_file(expected[:config_file]).without_content(%r{^DatabaseOwner}).without_content(%r{database\.clamav\.net}) }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('freshclam', rendered_content(expected[:config_file])) }
         end
       end
@@ -130,7 +130,7 @@ describe 'clamav::freshclam' do
 
         it { is_expected.to contain_file(expected[:config_file]).with_content(%r{^LogFileMaxSize 0\nLogRotate yes\n}) }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('freshclam', rendered_content(expected[:config_file])) }
         end
       end

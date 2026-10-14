@@ -16,7 +16,7 @@ describe 'clamav::milter' do
     }
   end
 
-  context 'validated by ClamAV' do
+  context 'validated by ClamAV', :clamav do
     it 'rejects an unknown option' do
       expect(expect_valid_for_clamav('milter', "MilterSocket /run/milter.sock\nUnknownOption yes\n", valid: false)).to include('Unknown option UnknownOption')
     end
@@ -116,7 +116,7 @@ describe 'clamav::milter' do
           it { is_expected.to contain_package(expected[:package]).that_notifies('Service[clamav-milter]') }
         end
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('milter', rendered_content(expected[:config_file])) }
         end
       end
@@ -147,7 +147,7 @@ describe 'clamav::milter' do
         it { is_expected.to contain_file(expected[:config_file]).without_content(%r{^MilterSocket(Group|Mode)}) }
         it { is_expected.to contain_service('clamav-milter') }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('milter', rendered_content(expected[:config_file])) }
         end
       end
@@ -157,7 +157,7 @@ describe 'clamav::milter' do
 
         it { is_expected.to contain_file(expected[:config_file]).with_content(%r{^LogFileMaxSize 1M\nLogFileUnlock no\nLogInfected Off\nLogRotate yes\n}) }
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('milter', rendered_content(expected[:config_file])) }
         end
       end
@@ -182,7 +182,7 @@ describe 'clamav::milter' do
 
         it { is_expected.to contain_package(expected[:package]).that_comes_before("File[#{expected[:allow_list_file]}]") } unless arch
 
-        context 'validated by ClamAV' do
+        context 'validated by ClamAV', :clamav do
           it { expect_valid_for_clamav('milter', rendered_content(expected[:config_file])) }
         end
       end
