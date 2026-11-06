@@ -46,19 +46,27 @@ the daemons check theirs before it is replaced.
   8.2 or later and, on the RedHat family,
   [puppet/epel](https://forge.puppet.com/modules/puppet/epel) 5.x or 6.x.
   Their current releases (10.2.0 and 6.0.0) do not declare OpenVox 9 yet,
-  the module is unit tested on OpenVox 9 with them.
+  the module is tested on OpenVox 9 with them.
 * systemd. The packaged releases of ClamAV are:
 
-  | Distribution          | ClamAV | Notes                         |
-  |-----------------------|--------|-------------------------------|
-  | EL 8 to 10 (EPEL)     | 1.4.6  |                               |
-  | Debian 12 and 13      | 1.4.3  |                               |
-  | Ubuntu 22.04 and 24.04| 1.5.4  |                               |
-  | Arch Linux            | 1.5.4  | no unit for clamav-milter     |
+  | Distribution          | ClamAV | Notes                                  |
+  |-----------------------|--------|----------------------------------------|
+  | EL 8 to 10 (EPEL)     | 1.4.6  | clamav-milter needs CRB on EL 9        |
+  | Debian 12             | 1.4.6  |                                        |
+  | Debian 13             | 1.4.3  |                                        |
+  | Ubuntu 22.04 and 24.04| 1.5.4  |                                        |
+  | Arch Linux            | 1.5.4  | no unit for clamav-milter              |
+
+  On EL 9, the libmilter clamav-milter links to comes from CRB, which EPEL
+  relies on: `manage_repo` enables it along with EPEL on CentOS Stream, Rocky
+  and AlmaLinux (`crb_repo`). On RHEL 9, enable CodeReady Builder with
+  `subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms`.
 
 The module is unit tested with OpenVox 8 and 9 on EL 8 to 10 (RHEL, CentOS
 Stream, Rocky, AlmaLinux), Debian 12 and 13, Ubuntu 22.04 and 24.04 and Arch
-Linux, and its configuration files are checked by ClamAV 1.4 and 1.5.
+Linux, and acceptance tested on each of them but RHEL, in containers with
+the packages of the distribution. Its configuration files are also checked
+by the upstream ClamAV 1.4 and 1.5 releases.
 
 ### Beginning with clamav
 
@@ -287,6 +295,12 @@ A freshclam daemon stopped in favour of a cron job can become
 * The validation runs the installed `/usr/sbin/clamd` and
   `/usr/bin/freshclam`: install ClamAV from the packages, or set
   `validate => false`.
+* On RHEL 9, the module does not enable CodeReady Builder, which
+  clamav-milter needs: subscription-manager manages that repository.
+* On CentOS Stream 10, which has no minor release, puppet/epel 6.1.0 points
+  EPEL at `epel-10.`, which does not exist. Set `epel::epel_metalink` to the
+  repository of the epel-release package,
+  `https://mirrors.fedoraproject.org/metalink?repo=epel-10s&arch=$basearch`.
 
 ## Development
 
@@ -309,11 +323,24 @@ otherwise); point `CLAMD`, `FRESHCLAM` and `CLAMCONF` at other executables to
 test another release, and set `CLAMAV_VALIDATE` to fail rather than leave them
 out when they are missing.
 
+The acceptance tests run with
+[voxpupuli-acceptance](https://github.com/voxpupuli/voxpupuli-acceptance) in
+containers, here on Debian 13 with OpenVox 9. freshclam cannot download the
+databases there: clamd loads the signature of a test file instead
+(`spec/support/acceptance/clamav.rb`), and scans it through its socket.
+
+```
+BEAKER_HYPERVISOR=container_podman BEAKER_SETFILE=debian13-64 BEAKER_PUPPET_COLLECTION=openvox9 bundle exec rake beaker
+```
+
 GitHub Actions run the static validations, RuboCop, a REFERENCE.md freshness
-check and the unit tests on OpenVox 8 (Ruby 3.2) and 9 (Ruby 4.0) through the
-[Vox Pupuli](https://github.com/voxpupuli/gha-puppet) reusable workflow on
-every pull request and push to `master`, and check the rendered files with
-ClamAV 1.4.6, 1.5.4 and the latest release (`.github/workflows/ci.yml`).
+check and the unit tests on OpenVox 8 (Ruby 3.2) and 9 (Ruby 4.0) on every pull
+request and push to `master`, the acceptance tests on each supported OS with
+OpenVox 8 and 9 (Arch Linux with its own Puppet package), the matrices being
+built from `metadata.json` by the
+[Vox Pupuli](https://github.com/voxpupuli/gha-puppet) reusable workflow, and
+check the rendered files with ClamAV 1.4.6, 1.5.4 and the latest release
+(`.github/workflows/ci.yml`).
 
 Pushing a `v<version>` tag runs the CI on the tagged commit, then publishes
 the module to the Puppet Forge and creates a GitHub release through the Vox

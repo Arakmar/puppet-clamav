@@ -1,6 +1,6 @@
 {
   "name": "arakmar-clamav",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "author": "Yoann Laissus",
   "summary": "ClamAV scanner daemon, freshclam updater and milter",
   "license": "GPL-3.0-or-later",

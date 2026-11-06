@@ -29,8 +29,14 @@
 # @param shell
 #   Shell of `user`.
 # @param manage_repo
-#   Whether to set up EPEL, where the RedHat family gets ClamAV from. The
-#   module data enables it on the RedHat family only.
+#   Whether to set up EPEL, where the RedHat family gets ClamAV from, and the
+#   `crb_repo` repository. The module data enables it on the RedHat family
+#   only.
+# @param crb_repo
+#   Repository enabled along with EPEL by `manage_repo`, for the EPEL packages
+#   depending on it: on EL 9, clamav-milter needs the libmilter of CRB. The
+#   module data sets `crb` on CentOS Stream, Rocky and AlmaLinux 9. On RHEL 9,
+#   enable CodeReady Builder with subscription-manager instead.
 # @param package_name
 #   Name of the base package.
 # @param package_ensure
@@ -53,6 +59,7 @@ class clamav (
   Stdlib::Absolutepath $home,
   Stdlib::Absolutepath $shell,
   Boolean $manage_repo,
+  Optional[String[1]] $crb_repo = undef,
   String[1] $package_name = 'clamav',
   String[1] $package_ensure = 'installed',
   Boolean $manage_user = false,

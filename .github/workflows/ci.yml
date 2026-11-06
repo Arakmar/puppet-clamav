@@ -1,10 +1,12 @@
 ---
 # The static validations and the unit tests come from the Vox Pupuli
-# reusable workflow (https://github.com/voxpupuli/gha-puppet, basic.yml):
+# reusable workflow (https://github.com/voxpupuli/gha-puppet, beaker.yml):
 # rake validate (syntax, metadata, REFERENCE.md freshness), lint and check,
 # RuboCop, then the unit tests on every OpenVox major version of
-# metadata.json, each with the Ruby its packages ship. The clamav job checks
-# the rendered configuration files with ClamAV itself.
+# metadata.json, each with the Ruby its packages ship, and the acceptance
+# tests on each supported OS in a container with the OpenVox packages (Arch
+# Linux with its own Puppet package). The clamav job checks the rendered
+# configuration files with the upstream ClamAV releases, the latest included.
 #
 # release.yml calls it before publishing a tag.
 
@@ -29,7 +31,7 @@ permissions:
 jobs:
   puppet:
     name: Puppet
-    uses: voxpupuli/gha-puppet/.github/workflows/basic.yml@v4
+    uses: voxpupuli/gha-puppet/.github/workflows/beaker.yml@v4
 
   clamav:
     name: ClamAV ${{ matrix.clamav }}

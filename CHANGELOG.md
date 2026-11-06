@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## Release 3.1.0
+
+**Features**
+
+* `crb_repo`: `manage_repo` enables the CRB repository along with EPEL, on
+  CentOS Stream, Rocky and AlmaLinux 9 by default.
+* Beaker acceptance tests on each supported OS but RHEL, with OpenVox 8 and
+  9: clamd, freshclam and clamav-milter run from the packages of the
+  distribution and clamd scans a test file through its socket.
+
+**Bugfixes**
+
+* clamav-milter installs on EL 9, where the libmilter it links to comes from
+  CRB rather than EPEL.
+
+**Known issues**
+
+* On CentOS Stream 10, puppet/epel 6.1.0 points EPEL at a repository that
+  does not exist: the README gives the `epel::epel_metalink` to set.
+
 ## Release 3.0.0
 
 First release published as `arakmar-clamav`, the continuation of

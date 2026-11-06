@@ -7,6 +7,12 @@ rescue LoadError
 end
 
 begin
+  require 'voxpupuli/acceptance/rake'
+rescue LoadError
+  # only available if gem group system_tests is installed
+end
+
+begin
   require 'voxpupuli/release/rake_tasks'
 rescue LoadError
   # only available if gem group release is installed
