@@ -7,6 +7,10 @@ group :test do
   gem 'json', '< 3', require: false
 end
 
+group :system_tests do
+  gem 'voxpupuli-acceptance', '~> 4.4', require: false
+end
+
 group :release do
   gem 'voxpupuli-release', '~> 5.5', require: false
 end
