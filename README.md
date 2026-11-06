@@ -49,12 +49,18 @@ the daemons check theirs before it is replaced.
   the module is unit tested on OpenVox 9 with them.
 * systemd. The packaged releases of ClamAV are:
 
-  | Distribution          | ClamAV | Notes                         |
-  |-----------------------|--------|-------------------------------|
-  | EL 8 to 10 (EPEL)     | 1.4.6  |                               |
-  | Debian 12 and 13      | 1.4.3  |                               |
-  | Ubuntu 22.04 and 24.04| 1.5.4  |                               |
-  | Arch Linux            | 1.5.4  | no unit for clamav-milter     |
+  | Distribution          | ClamAV | Notes                                  |
+  |-----------------------|--------|----------------------------------------|
+  | EL 8 to 10 (EPEL)     | 1.4.6  | clamav-milter needs CRB on EL 9        |
+  | Debian 12             | 1.4.6  |                                        |
+  | Debian 13             | 1.4.3  |                                        |
+  | Ubuntu 22.04 and 24.04| 1.5.4  |                                        |
+  | Arch Linux            | 1.5.4  | no unit for clamav-milter              |
+
+  On EL 9, the libmilter clamav-milter links to comes from CRB, which EPEL
+  relies on: `manage_repo` enables it along with EPEL on CentOS Stream, Rocky
+  and AlmaLinux (`crb_repo`). On RHEL 9, enable CodeReady Builder with
+  `subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms`.
 
 The module is unit tested with OpenVox 8 and 9 on EL 8 to 10 (RHEL, CentOS
 Stream, Rocky, AlmaLinux), Debian 12 and 13, Ubuntu 22.04 and 24.04 and Arch
@@ -287,6 +293,8 @@ A freshclam daemon stopped in favour of a cron job can become
 * The validation runs the installed `/usr/sbin/clamd` and
   `/usr/bin/freshclam`: install ClamAV from the packages, or set
   `validate => false`.
+* On RHEL 9, the module does not enable CodeReady Builder, which
+  clamav-milter needs: subscription-manager manages that repository.
 
 ## Development
 

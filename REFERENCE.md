@@ -71,6 +71,7 @@ The following parameters are available in the `clamav` class:
 * [`home`](#-clamav--home)
 * [`shell`](#-clamav--shell)
 * [`manage_repo`](#-clamav--manage_repo)
+* [`crb_repo`](#-clamav--crb_repo)
 * [`package_name`](#-clamav--package_name)
 * [`package_ensure`](#-clamav--package_ensure)
 * [`manage_user`](#-clamav--manage_user)
@@ -107,10 +108,22 @@ Shell of `user`.
 
 Data type: `Boolean`
 
-Whether to set up EPEL, where the RedHat family gets ClamAV from. The
-module data enables it on the RedHat family only.
+Whether to set up EPEL, where the RedHat family gets ClamAV from, and the
+`crb_repo` repository. The module data enables it on the RedHat family
+only.
 
 Default value: `false`
+
+##### <a name="-clamav--crb_repo"></a>`crb_repo`
+
+Data type: `Optional[String[1]]`
+
+Repository enabled along with EPEL by `manage_repo`, for the EPEL packages
+depending on it: on EL 9, clamav-milter needs the libmilter of CRB. The
+module data sets `crb` on CentOS Stream, Rocky and AlmaLinux 9. On RHEL 9,
+enable CodeReady Builder with subscription-manager instead.
+
+Default value: `undef`
 
 ##### <a name="-clamav--package_name"></a>`package_name`
 

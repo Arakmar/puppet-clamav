@@ -1,0 +1,3 @@
+---
+# clamav-milter needs the libmilter of CRB, which EPEL relies on
+clamav::crb_repo: 'crb'

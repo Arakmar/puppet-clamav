@@ -6,6 +6,8 @@ describe 'clamav' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
       redhat = os_facts[:os]['family'] == 'RedHat'
+      # EPEL 9 relies on CRB, which RHEL gets from subscription-manager
+      crb = %w[CentOS Rocky AlmaLinux].include?(os_facts[:os]['name']) && os_facts[:os]['release']['major'] == '9'
 
       let(:facts) { os_facts }
       let(:user) do
@@ -31,6 +33,12 @@ describe 'clamav' do
         else
           it { is_expected.not_to contain_class('epel') }
         end
+
+        if crb
+          it { is_expected.to contain_yumrepo('crb').with_enabled('1').without(%i[baseurl mirrorlist metalink descr]).that_comes_before('Package[clamav]') }
+        else
+          it { is_expected.not_to contain_yumrepo('crb') }
+        end
       end
 
       context 'without the repository' do
@@ -38,6 +46,24 @@ describe 'clamav' do
 
         it { is_expected.to compile.with_all_deps }
         it { is_expected.not_to contain_class('epel') }
+        it { is_expected.not_to contain_yumrepo('crb') }
+      end
+
+      if redhat
+        context 'with another CRB repository' do
+          let(:params) { { crb_repo: 'codeready-builder-for-rhel-9-x86_64-rpms' } }
+
+          it { is_expected.to compile.with_all_deps }
+          it { is_expected.to contain_yumrepo('codeready-builder-for-rhel-9-x86_64-rpms').with_enabled('1').without(%i[baseurl mirrorlist metalink descr]).that_comes_before('Package[clamav]') }
+          it { is_expected.not_to contain_yumrepo('crb') }
+        end
+
+        context 'with a CRB repository declared elsewhere' do
+          let(:params) { { crb_repo: 'crb' } }
+          let(:pre_condition) { "yumrepo { 'crb': enabled => '1' }" }
+
+          it { is_expected.to compile.with_all_deps }
+        end
       end
 
       context 'with another package' do
